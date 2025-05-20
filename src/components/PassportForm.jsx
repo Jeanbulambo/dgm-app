@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Form, Row, Col, Button } from 'react-bootstrap';
+import PropTypes from 'prop-types';
+import {
+  Form, Row, Col, Button,
+} from 'react-bootstrap';
 import paysData from '../data/pays.json';
 import typesVisa from '../data/typesVisa.json';
-// Déclaration de la fonction avant utilisation
-const getTodayDate = () => new Date().toISOString().split('T')[0];
 
-// Ensuite, tu peux utiliser getTodayDate dans initialState etc.
+const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 const initialState = {
   prenom: '',
@@ -37,7 +38,9 @@ function PassportForm({ onSubmit }) {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const {
+      name, value, type, checked,
+    } = e.target;
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
@@ -48,7 +51,7 @@ function PassportForm({ onSubmit }) {
     e.preventDefault();
     onSubmit({
       ...formData,
-      date_enregistrement: getTodayDate(), // met à jour au moment de la soumission
+      date_enregistrement: getTodayDate(),
     });
     setFormData({ ...initialState, date_enregistrement: getTodayDate() });
   };
@@ -115,8 +118,8 @@ function PassportForm({ onSubmit }) {
             <Form.Label>Nationalité</Form.Label>
             <Form.Select name="nationalite" value={formData.nationalite} onChange={handleChange} required>
               <option value="">-- Choisir --</option>
-              {paysList.map((pays, index) => (
-                <option key={index} value={pays}>
+              {paysList.map((pays) => (
+                <option key={pays} value={pays}>
                   {pays}
                 </option>
               ))}
@@ -128,8 +131,8 @@ function PassportForm({ onSubmit }) {
             <Form.Label>Type de visa</Form.Label>
             <Form.Select name="type_visa" value={formData.type_visa} onChange={handleChange}>
               <option value="">-- Choisir --</option>
-              {visaList.map((visa, index) => (
-                <option key={index} value={visa}>
+              {visaList.map((visa) => (
+                <option key={visa} value={visa}>
                   {visa}
                 </option>
               ))}
@@ -153,7 +156,7 @@ function PassportForm({ onSubmit }) {
           </Form.Group>
         </Col>
         <Col md={4}>
-        <Form.Group>
+          <Form.Group>
             <Form.Label>Frontalier de</Form.Label>
             <Form.Select name="frontalier" value={formData.frontalier} onChange={handleChange} required>
               <option value="">-- Choisir --</option>
@@ -175,13 +178,13 @@ function PassportForm({ onSubmit }) {
       <Row className="mb-3">
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Date d'expiration</Form.Label>
+            <Form.Label>Date d&apos;expiration</Form.Label>
             <Form.Control type="date" name="date_expiration" value={formData.date_expiration} onChange={handleChange} />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Date d'entrée</Form.Label>
+            <Form.Label>Date d&apos;entrée</Form.Label>
             <Form.Control type="date" name="date_entree" value={formData.date_entree} onChange={handleChange} />
           </Form.Group>
         </Col>
@@ -196,9 +199,15 @@ function PassportForm({ onSubmit }) {
       <Row className="mb-4">
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Date d'enregistrement</Form.Label>
-            <Form.Control type="date" name="date_enregistrement" value={formData.date_enregistrement} onChange={handleChange} readOnly
-            disabled />
+            <Form.Label>Date d&apos;enregistrement</Form.Label>
+            <Form.Control
+              type="date"
+              name="date_enregistrement"
+              value={formData.date_enregistrement}
+              onChange={handleChange}
+              readOnly
+              disabled
+            />
           </Form.Group>
         </Col>
       </Row>
@@ -207,5 +216,10 @@ function PassportForm({ onSubmit }) {
     </Form>
   );
 }
+
+// ✅ Validation des props
+PassportForm.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+};
 
 export default PassportForm;

@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
-import { Container, Table, Form, Button, Row, Col, Pagination } from "react-bootstrap";
-import db from "../db/indexedDb"; // Ajuste le chemin si besoin
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import {
+  Container, Table, Form, Button, Row, Col, Pagination,
+} from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import db from '../db/indexedDb';
 
 const TriSimple = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-
-  const [prenomFilter, setPrenomFilter] = useState("");
-  const [passportFilter, setPassportFilter] = useState("");
+  const [prenomFilter, setPrenomFilter] = useState('');
+  const [passportFilter, setPassportFilter] = useState('');
   const [nationalities, setNationalities] = useState([]);
-  const [selectedNat, setSelectedNat] = useState("");
-
+  const [selectedNat, setSelectedNat] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,11 +44,13 @@ const TriSimple = () => {
     });
 
     setFilteredData(filtered);
-    setCurrentPage(1); // reset page on filter
+    setCurrentPage(1);
   }, [prenomFilter, passportFilter, selectedNat, data]);
 
+  const confirmDelete = () => toast.success('Voulez-vous vraiment supprimer cet enregistrement ?');
+
   const handleDelete = async (id) => {
-    if (window.confirm("Voulez-vous vraiment supprimer cet enregistrement ?")) {
+    if (confirmDelete()) {
       await db.passports.delete(id);
       const newData = data.filter((item) => item.id !== id);
       setData(newData);
@@ -63,7 +65,6 @@ const TriSimple = () => {
     navigate(`/passport/${id}`);
   };
 
-  // Pagination calculs
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -72,7 +73,7 @@ const TriSimple = () => {
   const renderPagination = () => {
     const items = [];
 
-    for (let number = 1; number <= totalPages; number++) {
+    for (let number = 1; number <= totalPages; number += 1) {
       items.push(
         <Pagination.Item
           key={number}
@@ -80,17 +81,29 @@ const TriSimple = () => {
           onClick={() => setCurrentPage(number)}
         >
           {number}
-        </Pagination.Item>
+        </Pagination.Item>,
       );
     }
 
     return (
       <Pagination className="justify-content-center mt-3">
-        <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
-        <Pagination.Prev onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} />
+        <Pagination.First
+          onClick={() => setCurrentPage(1)}
+          disabled={currentPage === 1}
+        />
+        <Pagination.Prev
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        />
         {items}
-        <Pagination.Next onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} />
-        <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
+        <Pagination.Next
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        />
+        <Pagination.Last
+          onClick={() => setCurrentPage(totalPages)}
+          disabled={currentPage === totalPages}
+        />
       </Pagination>
     );
   };
@@ -124,8 +137,8 @@ const TriSimple = () => {
             onChange={(e) => setSelectedNat(e.target.value)}
           >
             <option value="">Toutes les nationalités</option>
-            {nationalities.map((nat, idx) => (
-              <option key={idx} value={nat}>
+            {nationalities.map((nat) => (
+              <option key={nat} value={nat}>
                 {nat}
               </option>
             ))}
@@ -143,22 +156,21 @@ const TriSimple = () => {
             <option value="50">50 par page</option>
           </Form.Select>
 
-          <Button variant="secondary" onClick={() => navigate("/")}>
+          <Button variant="secondary" onClick={() => navigate('/')}>
             Retour Accueil
           </Button>
-          <Button variant="primary" onClick={() => navigate("/tri-export")}>
+          <Button variant="primary" onClick={() => navigate('/tri-export')}>
             Vers Tri/Export
           </Button>
         </Col>
       </Row>
 
       {currentItems.length > 0 ? (
-        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-        <>
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
           <Table striped bordered hover responsive>
             <thead className="table-dark">
               <tr>
-                <th>#</th>  {/* Numérotation dynamique */}
+                <th>#</th>
                 <th>Prénom</th>
                 <th>Nom</th>
                 <th>Numéro Passeport</th>
@@ -170,12 +182,16 @@ const TriSimple = () => {
             <tbody>
               {currentItems.map((row, index) => (
                 <tr key={row.id}>
-                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* ici */}
+                  <td>
+                    {(currentPage - 1) * itemsPerPage + index + 1}
+                  </td>
                   <td>{row.prenom}</td>
                   <td>{row.nom}</td>
                   <td>{row.numero_passport}</td>
                   <td>{row.nationalite}</td>
-                  <td>{new Date(row.date_enregistrement).toLocaleDateString()}</td>
+                  <td>
+                    {new Date(row.date_enregistrement).toLocaleDateString()}
+                  </td>
                   <td>
                     <Button
                       variant="danger"
@@ -207,7 +223,6 @@ const TriSimple = () => {
           </Table>
 
           {renderPagination()}
-        </>
         </div>
       ) : (
         <p>Aucun enregistrement trouvé.</p>

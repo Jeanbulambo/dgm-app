@@ -1,22 +1,23 @@
-import { useEffect, useState } from "react";
-import { Container, Table, Form, Button, Row, Col } from "react-bootstrap";
-import Papa from "papaparse";
-import { saveAs } from "file-saver";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
-import db from "../db/indexedDb.js";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import {
+  Container, Table, Form, Button, Row, Col,
+} from 'react-bootstrap';
+import Papa from 'papaparse';
+import { saveAs } from 'file-saver';
+import JsPDF from 'jspdf'; // Correction ici : majuscule pour correspondre à new-cap
+import 'jspdf-autotable';
+import { useNavigate } from 'react-router-dom';
+import db from '../db/indexedDb';
 
 const TriExport = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
 
-  // Nouveaux états de filtres
-  const [prenomFilter, setPrenomFilter] = useState("");
-  const [passportFilter, setPassportFilter] = useState("");
-  const [selectedNat, setSelectedNat] = useState("");
-  const [startDate, setStartDate] = useState(""); // pour date d'enregistrement début
-  const [endDate, setEndDate] = useState(""); // pour date d'enregistrement fin
+  const [prenomFilter, setPrenomFilter] = useState('');
+  const [passportFilter, setPassportFilter] = useState('');
+  const [selectedNat, setSelectedNat] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const [nationalities, setNationalities] = useState([]);
   const navigate = useNavigate();
@@ -24,10 +25,8 @@ const TriExport = () => {
   useEffect(() => {
     const fetchData = async () => {
       const allData = await db.passports.toArray();
-      // Trie par date_enregistrement décroissante
       const sortedData = allData.sort(
-        (a, b) =>
-          new Date(b.date_enregistrement) - new Date(a.date_enregistrement)
+        (a, b) => new Date(b.date_enregistrement) - new Date(a.date_enregistrement),
       );
       const lastTen = sortedData.slice(0, 10);
       setData(lastTen);
@@ -42,26 +41,19 @@ const TriExport = () => {
 
   useEffect(() => {
     const filtered = data.filter((item) => {
-      // Filtre prénom (contient, insensible à la casse)
       const matchPrenom = prenomFilter
         ? item.prenom.toLowerCase().includes(prenomFilter.toLowerCase())
         : true;
 
-      // Filtre numéro passeport (contient, insensible à la casse)
       const matchPassport = passportFilter
-        ? item.numero_passport
-            .toLowerCase()
-            .includes(passportFilter.toLowerCase())
+        ? item.numero_passport.toLowerCase().includes(passportFilter.toLowerCase())
         : true;
 
-      // Filtre nationalité (exact)
       const matchNat = selectedNat ? item.nationalite === selectedNat : true;
 
-      // Filtre date d'enregistrement entre startDate et endDate
       const itemDate = new Date(item.date_enregistrement);
-      const matchDate =
-        (startDate ? itemDate >= new Date(startDate) : true) &&
-        (endDate ? itemDate <= new Date(endDate) : true);
+      const matchDate = (startDate ? itemDate >= new Date(startDate) : true)
+        && (endDate ? itemDate <= new Date(endDate) : true);
 
       return matchPrenom && matchPassport && matchNat && matchDate;
     });
@@ -71,19 +63,17 @@ const TriExport = () => {
 
   const exportCSV = () => {
     const csv = Papa.unparse(filteredData);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, "donnees_exportees.csv");
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, 'donnees_exportees.csv');
   };
 
   const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Données Exportées", 14, 15);
+    const doc = new JsPDF(); // Correction ici
+    doc.text('Données Exportées', 14, 15);
     const tableColumn = Object.keys(filteredData[0] || {});
-    const tableRows = filteredData.map((row) =>
-      tableColumn.map((key) => row[key])
-    );
+    const tableRows = filteredData.map((row) => tableColumn.map((key) => row[key]));
     doc.autoTable({ head: [tableColumn], body: tableRows, startY: 20 });
-    doc.save("donnees_exportees.pdf");
+    doc.save('donnees_exportees.pdf');
   };
 
   return (
@@ -91,7 +81,6 @@ const TriExport = () => {
       <h3 className="mb-4">Tableau des Passeports</h3>
 
       <Row className="mb-3">
-
         <Col md={3}>
           <Form.Control
             type="text"
@@ -116,8 +105,9 @@ const TriExport = () => {
             onChange={(e) => setSelectedNat(e.target.value)}
           >
             <option value="">Toutes les nationalités</option>
-            {nationalities.map((nat, idx) => (
-              <option key={idx} value={nat}>
+            {/* Liste des nationalités */}
+            {nationalities.map((nat) => (
+              <option key={nat} value={nat}>
                 {nat}
               </option>
             ))}
@@ -152,32 +142,32 @@ const TriExport = () => {
           <Button variant="danger" onClick={exportPDF} className="me-2">
             Exporter PDF
           </Button>
-          <Button variant="secondary" onClick={() => navigate("/")}>
+          <Button variant="secondary" onClick={() => navigate('/')}>
             Retour
           </Button>
         </Col>
       </Row>
 
       {filteredData.length > 0 ? (
-        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-        <Table striped bordered hover responsive>
-          <thead className="table-dark">
-            <tr>
-              {Object.keys(filteredData[0] || {}).map((key) => (
-                <th key={key}>{key.toUpperCase()}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((row, idx) => (
-              <tr key={idx}>
-                {Object.values(row).map((val, i) => (
-                  <td key={i}>{String(val)}</td>
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <Table striped bordered hover responsive>
+            <thead className="table-dark">
+              <tr>
+                {Object.keys(filteredData[0] || {}).map((key) => (
+                  <th key={key}>{key.toUpperCase()}</th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {filteredData.map((row) => (
+                <tr key={row.numero_passport || row.id || JSON.stringify(row)}>
+                  {Object.entries(row).map(([key, val]) => (
+                    <td key={key}>{String(val)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         </div>
       ) : (
         <p>Aucune donnée à afficher.</p>

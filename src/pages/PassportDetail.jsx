@@ -78,7 +78,7 @@ const PassportDetail = () => {
 
   return (
     <Container className="my-4">
-      <h3>Détail de l’enregistrement ID : {passport.id}</h3>
+      <h3>Détail de l’expatrié ID : {passport.id}</h3>
       <Form>
         <Row>
           {Object.entries(formData).map(([key, value]) => (

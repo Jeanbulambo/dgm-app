@@ -153,6 +153,7 @@ const TriSimple = () => {
       </Row>
 
       {currentItems.length > 0 ? (
+        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
         <>
           <Table striped bordered hover responsive>
             <thead className="table-dark">
@@ -207,6 +208,7 @@ const TriSimple = () => {
 
           {renderPagination()}
         </>
+        </div>
       ) : (
         <p>Aucun enregistrement trouvé.</p>
       )}

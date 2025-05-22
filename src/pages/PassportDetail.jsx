@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
-  Container, Form, Button, Row, Col,
+  Container, Form, Button, Row, Col, Image,
 } from 'react-bootstrap';
 import db from '../db/indexedDb';
 
@@ -30,16 +30,19 @@ const PassportDetail = () => {
     date_retour: '',
     adresse_rdc: '',
     date_enregistrement: '',
+    agent_saisi: '',
+    photo: '',
   });
 
   useEffect(() => {
     const fetchPassport = async () => {
       const data = await db.passports.get(Number(id));
       if (!data) {
-        toast.success('Enregitsrement non trouvé !');
+        toast.error("Enregistrement non trouvé !");
         navigate('/tri-simple');
         return;
       }
+
       setPassport(data);
       setFormData({
         prenom: data.prenom || '',
@@ -58,8 +61,11 @@ const PassportDetail = () => {
         date_retour: data.date_retour || '',
         adresse_rdc: data.adresse_rdc || '',
         date_enregistrement: data.date_enregistrement || '',
+        agent_saisi:data.agent_saisi || '',
+        photo: data.photo || '',
       });
     };
+
     fetchPassport();
   }, [id, navigate]);
 
@@ -70,56 +76,79 @@ const PassportDetail = () => {
   const handleSave = async () => {
     try {
       await db.passports.update(Number(id), formData);
-      toast.success('Mise à jour reussie !');
+      toast.success('Mise à jour réussie !');
       setEditMode(false);
     } catch (error) {
-      toast.success('Erreure lors de la mise a jour !');
+      toast.error('Erreur lors de la mise à jour !');
+      console.error(error);
     }
   };
 
   if (!passport) return <p>Chargement...</p>;
 
   return (
-    <Container className="my-4">
-      <h3>
-        Détail de l’expatrié ID :
-        {passport.id}
-      </h3>
+    <Container className="my-3 p-3 border rounded shadow-sm" style={{ maxWidth: '900px' }}>
+      <h4 className="text-center mb-3">
+        Détail sur l’expatrié ID : {passport.id}
+      </h4>
+
+      {formData.photo && (
+        <div className="mb-3 text-center">
+          <Image
+            src={formData.photo}
+            alt="Photo passeport"
+            rounded
+            style={{ maxHeight: '180px', maxWidth: '100%' }}
+          />
+        </div>
+      )}
+
       <Form>
-        <Row>
-          {Object.entries(formData).map(([key, value]) => (
-            <Col md={6} key={key} className="mb-3">
-              <Form.Label>{key.replace(/_/g, ' ').toUpperCase()}</Form.Label>
-              <Form.Control
-                type={key.includes('date') ? 'date' : 'text'}
-                name={key}
-                value={value}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </Col>
-          ))}
+        <Row className="g-2">
+          {Object.entries(formData).map(([key, value]) => {
+            if (key === 'photo') return null;
+            return (
+              <Col md={4} sm={6} xs={12} key={key}>
+                <Form.Group>
+                  <Form.Label className="small fw-semibold">
+                    {key.replace(/_/g, ' ').toUpperCase()}
+                  </Form.Label>
+                  <Form.Control
+                    type={key.includes('date') ? 'date' : 'text'}
+                    name={key}
+                    value={value}
+                    onChange={handleChange}
+                    disabled={!editMode || key === 'date_enregistrement'} // empêche la modification de date_enregistrement
+                    size="sm"
+                  />
+
+                </Form.Group>
+              </Col>
+            );
+          })}
         </Row>
 
-        {!editMode ? (
-          <>
-            <Button variant="primary" onClick={() => setEditMode(true)} className="me-2">
-              Modifier
-            </Button>
-            <Button variant="secondary" onClick={() => navigate('/tri-simple')}>
-              Retour
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button variant="success" onClick={handleSave} className="me-2">
-              Sauvegarder
-            </Button>
-            <Button variant="danger" onClick={() => setEditMode(false)}>
-              Annuler
-            </Button>
-          </>
-        )}
+        <div className="mt-3 d-flex justify-content-center gap-2 flex-wrap">
+          {!editMode ? (
+            <>
+              <Button variant="primary" size="sm" onClick={() => setEditMode(true)}>
+                Modifier
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => navigate('/tri-simple')}>
+                Retour
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="success" size="sm" onClick={handleSave}>
+                Sauvegarder
+              </Button>
+              <Button variant="danger" size="sm" onClick={() => setEditMode(false)}>
+                Annuler
+              </Button>
+            </>
+          )}
+        </div>
       </Form>
     </Container>
   );

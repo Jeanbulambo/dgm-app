@@ -4,8 +4,6 @@ import {
 } from 'react-bootstrap';
 import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import JsPDF from 'jspdf'; // Correction ici : majuscule pour correspondre à new-cap
-import 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
 import db from '../db/indexedDb';
 
@@ -62,23 +60,16 @@ const TriExport = () => {
   }, [prenomFilter, passportFilter, selectedNat, startDate, endDate, data]);
 
   const exportCSV = () => {
-    const csv = Papa.unparse(filteredData);
+    const csv = Papa.unparse(
+      filteredData.map(({ photo, id, ...rest }) => rest) // Exclure photo et id
+    );
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, 'donnees_exportees.csv');
   };
 
-  const exportPDF = () => {
-    const doc = new JsPDF(); // Correction ici
-    doc.text('Données Exportées', 14, 15);
-    const tableColumn = Object.keys(filteredData[0] || {});
-    const tableRows = filteredData.map((row) => tableColumn.map((key) => row[key]));
-    doc.autoTable({ head: [tableColumn], body: tableRows, startY: 20 });
-    doc.save('donnees_exportees.pdf');
-  };
-
   return (
     <Container className="my-4">
-      <h3 className="mb-4">Tableau des Passeports</h3>
+      <h3 className="mb-4">Enregistrements</h3>
 
       <Row className="mb-3">
         <Col md={3}>
@@ -105,7 +96,6 @@ const TriExport = () => {
             onChange={(e) => setSelectedNat(e.target.value)}
           >
             <option value="">Toutes les nationalités</option>
-            {/* Liste des nationalités */}
             {nationalities.map((nat) => (
               <option key={nat} value={nat}>
                 {nat}
@@ -139,9 +129,7 @@ const TriExport = () => {
           <Button variant="primary" onClick={exportCSV} className="me-2">
             Exporter CSV
           </Button>
-          <Button variant="danger" onClick={exportPDF} className="me-2">
-            Exporter PDF
-          </Button>
+
           <Button variant="secondary" onClick={() => navigate('/')}>
             Retour
           </Button>
@@ -153,17 +141,21 @@ const TriExport = () => {
           <Table striped bordered hover responsive>
             <thead className="table-dark">
               <tr>
-                {Object.keys(filteredData[0] || {}).map((key) => (
-                  <th key={key}>{key.toUpperCase()}</th>
-                ))}
+                {Object.keys(filteredData[0] || {})
+                  .filter((key) => key !== 'photo' && key !== 'id')
+                  .map((key) => (
+                    <th key={key}>{key.toUpperCase()}</th>
+                  ))}
               </tr>
             </thead>
             <tbody>
               {filteredData.map((row) => (
-                <tr key={row.numero_passport || row.id || JSON.stringify(row)}>
-                  {Object.entries(row).map(([key, val]) => (
-                    <td key={key}>{String(val)}</td>
-                  ))}
+                <tr key={row.numero_passport || JSON.stringify(row)}>
+                  {Object.entries(row)
+                    .filter(([key]) => key !== 'photo' && key !== 'id')
+                    .map(([key, val]) => (
+                      <td key={key}>{String(val)}</td>
+                    ))}
                 </tr>
               ))}
             </tbody>

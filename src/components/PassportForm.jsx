@@ -6,11 +6,15 @@ import {
 import paysData from '../data/pays.json';
 import typesVisa from '../data/typesVisa.json';
 
+// Import du css
+import './PassportForm.css';
+
 const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 const initialState = {
   prenom: '',
   nom: '',
+  photo: null,
   sexe: '',
   date_naissance: '',
   etat_civil: '',
@@ -19,7 +23,7 @@ const initialState = {
   type_visa: '',
   profession: '',
   en_charge_de: '',
-  frontalier: false,
+  frontalier: '',
   adresse_rdc: '',
   date_expiration: '',
   date_entree: '',
@@ -31,6 +35,17 @@ function PassportForm({ onSubmit }) {
   const [formData, setFormData] = useState(initialState);
   const [paysList, setPaysList] = useState([]);
   const [visaList, setVisaList] = useState([]);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, photo: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     setPaysList(paysData);
@@ -57,9 +72,31 @@ function PassportForm({ onSubmit }) {
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form onSubmit={handleSubmit} className="fullscreen-form">
+      <Row className="mb-2">
+        <Col md={6}>
+          <Form.Group controlId="formPhoto">
+            <Form.Label>Photo</Form.Label>
+            <Form.Control
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+            />
+            {formData.photo && (
+              <div className="mt-2">
+                <img
+                  src={formData.photo}
+                  alt="Aperçu photo"
+                  style={{ width: '150px', height: 'auto', borderRadius: '5px', border: '1px solid #ccc' }}
+                />
+              </div>
+            )}
+          </Form.Group>
+        </Col>
+      </Row>
+
       {/* Nom, Prénom, Sexe */}
-      <Row className="mb-3">
+      <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
             <Form.Label>Prénom</Form.Label>
@@ -68,7 +105,7 @@ function PassportForm({ onSubmit }) {
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Nom</Form.Label>
+            <Form.Label>Nom(s)</Form.Label>
             <Form.Control name="nom" value={formData.nom} onChange={handleChange} required />
           </Form.Group>
         </Col>
@@ -85,7 +122,7 @@ function PassportForm({ onSubmit }) {
       </Row>
 
       {/* Date naissance, état civil, numéro de passeport */}
-      <Row className="mb-3">
+      <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
             <Form.Label>Date de naissance</Form.Label>
@@ -98,21 +135,21 @@ function PassportForm({ onSubmit }) {
             <Form.Select name="etat_civil" value={formData.etat_civil} onChange={handleChange} required>
               <option value="">-- Choisir --</option>
               <option value="célibataire">Célibataire</option>
-              <option value="marié">Marié</option>
-              <option value="divorcé">Divorcé</option>
+              <option value="marié">Marié(e)</option>
+              <option value="divorcé">Divorcé(e)</option>
             </Form.Select>
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Numéro de passeport</Form.Label>
+            <Form.Label>Numéro passeport</Form.Label>
             <Form.Control name="numero_passport" value={formData.numero_passport} onChange={handleChange} required />
           </Form.Group>
         </Col>
       </Row>
 
       {/* Nationalité, Type de visa, Profession */}
-      <Row className="mb-3">
+      <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
             <Form.Label>Nationalité</Form.Label>
@@ -148,16 +185,16 @@ function PassportForm({ onSubmit }) {
       </Row>
 
       {/* En charge, Frontalier, Adresse RDC */}
-      <Row className="mb-3">
+      <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Personne en charge de</Form.Label>
+            <Form.Label>Prise en charge par</Form.Label>
             <Form.Control name="en_charge_de" value={formData.en_charge_de} onChange={handleChange} />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Frontalier de</Form.Label>
+            <Form.Label>Frontière de</Form.Label>
             <Form.Select name="frontalier" value={formData.frontalier} onChange={handleChange} required>
               <option value="">-- Choisir --</option>
               <option value="Ruzizi 1">Ruzizi 1</option>
@@ -168,14 +205,14 @@ function PassportForm({ onSubmit }) {
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Adresse en RDC</Form.Label>
+            <Form.Label>Adresse en RDC (ville/commune/Quartie/Avenue)</Form.Label>
             <Form.Control name="adresse_rdc" value={formData.adresse_rdc} onChange={handleChange} />
           </Form.Group>
         </Col>
       </Row>
 
       {/* Dates diverses */}
-      <Row className="mb-3">
+      <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
             <Form.Label>Date d&apos;expiration</Form.Label>
@@ -210,6 +247,12 @@ function PassportForm({ onSubmit }) {
             />
           </Form.Group>
         </Col>
+        <Col md={4}>
+          <Form.Group>
+            <Form.Label>Agent de saisi</Form.Label>
+            <Form.Control name="agent_saisi" value={formData.agent_saisi || ''} onChange={handleChange} />
+          </Form.Group>
+        </Col>
       </Row>
 
       <Button type="submit" variant="success">Enregistrer</Button>
@@ -217,7 +260,6 @@ function PassportForm({ onSubmit }) {
   );
 }
 
-// ✅ Validation des props
 PassportForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
 };

@@ -30,14 +30,14 @@ function Home() {
 
         <PassportForm onSubmit={handleFormSubmit} />
 
-        <hr className="my-5" />
+        <hr className="my-2" />
 
         <div className="text-center">
           <Button variant="primary" className="me-3" onClick={() => navigate('/tri-simple')}>
-            Aller à Tri Simple
+            Aller à Voir tout
           </Button>
           <Button variant="secondary" onClick={() => navigate('/tri-export')}>
-            Aller à Tri + Export
+            Aller à Export
           </Button>
         </div>
       </Container>

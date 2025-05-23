@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import JsPDF from 'jspdf'; // eslint-disable-line new-cap
+import autoTable from 'jspdf-autotable';
 import {
   Container, Table, Form, Button, Row, Col, Pagination,
 } from 'react-bootstrap';
@@ -17,74 +18,72 @@ const TriSimple = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const navigate = useNavigate();
 
+  const exportPDF = () => {
+    const doc = new JsPDF();
+    const tableColumn = [
+      'PRENOM', 'NOM&POST-NOM', 'NATIONALITE', 'NUME. PP',
+      'EXP. PP', 'D. ENTREE', 'EXP. VISA',
+    ];
+    const tableRows = [];
+
+    filteredData.forEach((item) => {
+      tableRows.push([
+        item.prenom,
+        item.nom,
+        item.nationalite,
+        item.numero_passport,
+        item.date_expiration,
+        item.date_entree,
+        item.date_retour,
+        new Date(item.date_enregistrement).toLocaleDateString(),
+      ]);
+    });
+
+    doc.text('Liste des Expatriés Filtrés', 14, 15);
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+    });
+
+    doc.save('expatries_filtres.pdf');
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const allData = await db.passports.toArray();
-
-      // Convertir le champ photo (Blob) en URL affichable
-      const dataWithPhotos = allData.map((item) => {
-        if (item.photo && typeof item.photo === 'object') {
-          const url = URL.createObjectURL(item.photo);
-          return { ...item, photoUrl: url };
-        }
-        return { ...item, photoUrl: null };
-      });
-
-      setData(dataWithPhotos);
-      setFilteredData(dataWithPhotos);
-
-      const nats = [...new Set(dataWithPhotos.map((item) => item.nationalite))];
+      setData(allData);
+      setFilteredData(allData);
+      const nats = [...new Set(allData.map((item) => item.nationalite))];
       setNationalities(nats);
     };
-
     fetchData();
   }, []);
 
-  // Nettoyage des URLs pour éviter les fuites mémoire
-  useEffect(() => {
-    return () => {
-      data.forEach((item) => {
-        if (item.photoUrl) {
-          URL.revokeObjectURL(item.photoUrl);
-        }
-      });
-    };
-  }, [data]);
-
   useEffect(() => {
     const filtered = data.filter((item) => {
-      const matchPrenom = item.prenom
-        .toLowerCase()
-        .includes(prenomFilter.toLowerCase());
-      const matchPassport = item.numero_passport
-        .toLowerCase()
-        .includes(passportFilter.toLowerCase());
+      const matchPrenom = item.prenom.toLowerCase().includes(prenomFilter.toLowerCase());
+      const matchPassport = item.numero_passport.toLowerCase().includes(passportFilter
+        .toLowerCase());
       const matchNat = selectedNat ? item.nationalite === selectedNat : true;
-
       return matchPrenom && matchPassport && matchNat;
     });
-
     setFilteredData(filtered);
     setCurrentPage(1);
   }, [prenomFilter, passportFilter, selectedNat, data]);
 
-  const confirmDelete = () => toast.success('Voulez-vous vraiment supprimer cet enregistrement ?');
-
   const handleDelete = async (id) => {
-    if (confirmDelete()) {
+    // eslint-disable-next-line no-alert
+    const isConfirmed = window.confirm('Voulez-vous vraiment supprimer cet enregistrement ?'); // no-alert géré
+    if (isConfirmed) {
       await db.passports.delete(id);
       const newData = data.filter((item) => item.id !== id);
       setData(newData);
     }
   };
 
-  const handleView = (id) => {
-    navigate(`/passport/${id}`);
-  };
-
-  const handleEdit = (id) => {
-    navigate(`/passport/${id}`);
-  };
+  const handleView = (id) => navigate(`/passport/${id}`);
+  const handleEdit = (id) => navigate(`/passport/${id}`);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -93,7 +92,6 @@ const TriSimple = () => {
 
   const renderPagination = () => {
     const items = [];
-
     for (let number = 1; number <= totalPages; number += 1) {
       items.push(
         <Pagination.Item
@@ -132,8 +130,7 @@ const TriSimple = () => {
   return (
     <Container className="my-4">
       <h3 className="mb-4">LISTE COMPLETE DES EXPATRIES</h3>
-
-      <Row className="mb-3">
+      <Row className="mb-3 align-items-end">
         <Col md={3}>
           <Form.Control
             type="text"
@@ -142,7 +139,6 @@ const TriSimple = () => {
             onChange={(e) => setPrenomFilter(e.target.value)}
           />
         </Col>
-
         <Col md={3}>
           <Form.Control
             type="text"
@@ -151,7 +147,6 @@ const TriSimple = () => {
             onChange={(e) => setPassportFilter(e.target.value)}
           />
         </Col>
-
         <Col md={3}>
           <Form.Select
             value={selectedNat}
@@ -159,14 +154,11 @@ const TriSimple = () => {
           >
             <option value="">Toutes les nationalités</option>
             {nationalities.map((nat) => (
-              <option key={nat} value={nat}>
-                {nat}
-              </option>
+              <option key={nat} value={nat}>{nat}</option>
             ))}
           </Form.Select>
         </Col>
-
-        <Col md="auto" className="d-flex align-items-center gap-2">
+        <Col md={3} className="d-flex flex-wrap gap-2">
           <Form.Select
             value={itemsPerPage}
             onChange={(e) => setItemsPerPage(Number(e.target.value))}
@@ -176,13 +168,9 @@ const TriSimple = () => {
             <option value="25">25 par page</option>
             <option value="50">50 par page</option>
           </Form.Select>
-
-          <Button variant="secondary" onClick={() => navigate('/')}>
-            Retour Accueil
-          </Button>
-          <Button variant="primary" onClick={() => navigate('/tri-export')}>
-            Vers /Export
-          </Button>
+          <Button variant="secondary" onClick={() => navigate('/')}>Accueil</Button>
+          <Button variant="primary" onClick={() => navigate('/tri-export')}>/Export</Button>
+          <Button variant="success" onClick={exportPDF}>Exporter en PDF</Button>
         </Col>
       </Row>
 
@@ -192,13 +180,14 @@ const TriSimple = () => {
             <thead className="table-dark">
               <tr>
                 <th>#</th>
-                <th>Photo</th>
                 <th>Prénom</th>
-                <th>Noms</th>
-                <th>Numéro Passeport</th>
+                <th>Nom</th>
                 <th>Nationalité</th>
-                <th>Date de Retour</th>
-                <th>Date Enregistrement</th>
+                <th>Numéro PP</th>
+                <th>Validité PP</th>
+                <th>Entrée</th>
+                <th>Validité visa</th>
+                <th>Enregistrement</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -206,30 +195,14 @@ const TriSimple = () => {
               {currentItems.map((row, index) => (
                 <tr key={row.id}>
                   <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                  <td>
-                    {row.photoUrl ? (
-                      <img
-                        src={row.photoUrl}
-                        alt="Photo"
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          objectFit: 'cover',
-                          borderRadius: '5px',
-                        }}
-                      />
-                    ) : (
-                      <span>Aucune</span>
-                    )}
-                  </td>
                   <td>{row.prenom}</td>
                   <td>{row.nom}</td>
-                  <td>{row.numero_passport}</td>
                   <td>{row.nationalite}</td>
+                  <td>{row.numero_passport}</td>
+                  <td>{row.date_expiration}</td>
+                  <td>{row.date_entree}</td>
                   <td>{row.date_retour}</td>
-                  <td>
-                    {new Date(row.date_enregistrement).toLocaleDateString()}
-                  </td>
+                  <td>{new Date(row.date_enregistrement).toLocaleDateString()}</td>
                   <td>
                     <Button
                       variant="danger"
@@ -259,7 +232,6 @@ const TriSimple = () => {
               ))}
             </tbody>
           </Table>
-
           {renderPagination()}
         </div>
       ) : (

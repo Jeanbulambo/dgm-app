@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   Form, Row, Col, Button,
@@ -35,6 +35,7 @@ function PassportForm({ onSubmit }) {
   const [formData, setFormData] = useState(initialState);
   const [paysList, setPaysList] = useState([]);
   const [visaList, setVisaList] = useState([]);
+  const fileInputRef = useRef(null); // ref pour réinitialiser le champ file
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -44,6 +45,8 @@ function PassportForm({ onSubmit }) {
         setFormData((prev) => ({ ...prev, photo: reader.result }));
       };
       reader.readAsDataURL(file);
+    } else {
+      setFormData((prev) => ({ ...prev, photo: null }));
     }
   };
 
@@ -69,6 +72,11 @@ function PassportForm({ onSubmit }) {
       date_enregistrement: getTodayDate(),
     });
     setFormData({ ...initialState, date_enregistrement: getTodayDate() });
+
+    // Réinitialiser le champ file (vidage visuel)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    }
   };
 
   return (
@@ -81,13 +89,16 @@ function PassportForm({ onSubmit }) {
               type="file"
               accept="image/*"
               onChange={handlePhotoChange}
+              ref={fileInputRef}
             />
             {formData.photo && (
               <div className="mt-2">
                 <img
                   src={formData.photo}
-                  alt="Aperçu photo"
-                  style={{ width: '150px', height: 'auto', borderRadius: '5px', border: '1px solid #ccc' }}
+                  alt="capture expatrie"
+                  style={{
+                    width: '150px', height: 'auto', borderRadius: '5px', border: '1px solid #ccc',
+                  }}
                 />
               </div>
             )}
@@ -142,13 +153,13 @@ function PassportForm({ onSubmit }) {
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Numéro passeport</Form.Label>
+            <Form.Label>Numéro Passeport</Form.Label>
             <Form.Control name="numero_passport" value={formData.numero_passport} onChange={handleChange} required />
           </Form.Group>
         </Col>
       </Row>
 
-      {/* Nationalité, Type de visa, Profession */}
+      {/* Nationalité, Type de visa, Profession (date_expiration_visa */}
       <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
@@ -178,18 +189,24 @@ function PassportForm({ onSubmit }) {
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Profession</Form.Label>
-            <Form.Control name="profession" value={formData.profession} onChange={handleChange} />
+            <Form.Label>Date D&apos;expiration Visa</Form.Label>
+            <Form.Control type="date" name="date_retour" value={formData.date_retour} onChange={handleChange} />
           </Form.Group>
         </Col>
       </Row>
 
-      {/* En charge, Frontalier, Adresse RDC */}
+      {/* En charge, Frontalier, Adresse RDC (date_expirationpp, date_entree, frontiere */}
       <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Prise en charge par</Form.Label>
-            <Form.Control name="en_charge_de" value={formData.en_charge_de} onChange={handleChange} />
+            <Form.Label>Date D&apos;expiration PP</Form.Label>
+            <Form.Control type="date" name="date_expiration" value={formData.date_expiration} onChange={handleChange} />
+          </Form.Group>
+        </Col>
+        <Col md={4}>
+          <Form.Group>
+            <Form.Label>Date d&apos;entrée</Form.Label>
+            <Form.Control type="date" name="date_entree" value={formData.date_entree} onChange={handleChange} />
           </Form.Group>
         </Col>
         <Col md={4}>
@@ -203,32 +220,26 @@ function PassportForm({ onSubmit }) {
             </Form.Select>
           </Form.Group>
         </Col>
+      </Row>
+
+      {/* Dates diverses (adresse, prise en charge, profession */}
+      <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
             <Form.Label>Adresse en RDC (ville/commune/Quartie/Avenue)</Form.Label>
             <Form.Control name="adresse_rdc" value={formData.adresse_rdc} onChange={handleChange} />
           </Form.Group>
         </Col>
-      </Row>
-
-      {/* Dates diverses */}
-      <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Date d&apos;expiration</Form.Label>
-            <Form.Control type="date" name="date_expiration" value={formData.date_expiration} onChange={handleChange} />
+            <Form.Label>Prise en charge </Form.Label>
+            <Form.Control name="en_charge_de" value={formData.en_charge_de} onChange={handleChange} />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Date d&apos;entrée</Form.Label>
-            <Form.Control type="date" name="date_entree" value={formData.date_entree} onChange={handleChange} />
-          </Form.Group>
-        </Col>
-        <Col md={4}>
-          <Form.Group>
-            <Form.Label>Date de retour</Form.Label>
-            <Form.Control type="date" name="date_retour" value={formData.date_retour} onChange={handleChange} />
+            <Form.Label>Profession</Form.Label>
+            <Form.Control name="profession" value={formData.profession} onChange={handleChange} />
           </Form.Group>
         </Col>
       </Row>
@@ -249,7 +260,7 @@ function PassportForm({ onSubmit }) {
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Agent de saisi</Form.Label>
+            <Form.Label>Agent au poste</Form.Label>
             <Form.Control name="agent_saisi" value={formData.agent_saisi || ''} onChange={handleChange} />
           </Form.Group>
         </Col>

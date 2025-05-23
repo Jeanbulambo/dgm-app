@@ -61,7 +61,12 @@ const TriExport = () => {
 
   const exportCSV = () => {
     const csv = Papa.unparse(
-      filteredData.map(({ photo, id, ...rest }) => rest) // Exclure photo et id
+      filteredData.map(({ photo, id, ...rest }) => rest),
+      {
+        quotes: false,
+        delimiter: ';',
+        skipEmptyLines: true,
+      },
     );
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, 'donnees_exportees.csv');

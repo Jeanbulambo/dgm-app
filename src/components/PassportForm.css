@@ -1,0 +1,32 @@
+/* Hauteur très réduite des inputs et selects */
+form.fullscreen-form .form-control,
+form.fullscreen-form .form-select {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.8rem;
+  height: 24px; /* encore plus bas */
+  line-height: 1.1;
+}
+
+/* Marges verticales très réduites entre les lignes */
+form.fullscreen-form .row.mb-2 {
+  margin-bottom: 0.3rem !important;
+}
+
+form.fullscreen-form .row.mb-4 {
+  margin-bottom: 0.6rem !important;
+}
+
+/* Labels plus compacts et petits */
+form.fullscreen-form .form-group label {
+  margin-bottom: 0.15rem;
+  font-size: 0.8rem;
+  line-height: 1.1;
+}
+
+/* Bouton plus petit et compact */
+form.fullscreen-form button.btn {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  height: 28px;
+  line-height: 1;
+}

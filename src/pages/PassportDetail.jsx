@@ -19,21 +19,22 @@ const PassportDetail = () => {
   const [formData, setFormData] = useState({
     prenom: '',
     nom: '',
-    numero_passport: '',
     sexe: '',
     date_naissance: '',
     etat_civil: '',
-    profession: '',
+    numero_passport: '',
+
     nationalite: '',
-    en_charge_de: '',
     type_visa: '',
-    date_expiration: '',
+    date_expiration_visa: '',
+    date_expiration_pp: '',
     date_entree: '',
-    frontalier: '',
-    date_retour: '',
+    frontiere: '',
     adresse_rdc: '',
+    prise_en_charge: '',
+    profession: '',
     date_enregistrement: '',
-    agent_saisi: '',
+    agent_au_poste: '',
     photo: '',
   });
 
@@ -71,7 +72,6 @@ const PassportDetail = () => {
 
     buttons.forEach((btn, index) => {
       originalStyles[index] = btn.style.display;
-      // eslint-disable-next-line no-param-reassign
       btn.style.display = 'none';
     });
 
@@ -98,8 +98,8 @@ const PassportDetail = () => {
     }
 
     pdf.save(`passport_${formData.nom}_${formData.prenom}.pdf`);
+
     buttons.forEach((btn, index) => {
-      // eslint-disable-next-line no-param-reassign
       btn.style.display = originalStyles[index];
     });
   };
@@ -124,16 +124,13 @@ const PassportDetail = () => {
             <div className="no-print">
               {!editMode ? (
                 <>
-                  <Button variant="primary" size="sm" onClick={() => setEditMode(true)}>Modifier</Button>
-                  {' '}
-                  <Button variant="secondary" size="sm" onClick={() => navigate('/tri-simple')}>Retour</Button>
-                  {' '}
+                  <Button variant="primary" size="sm" onClick={() => setEditMode(true)}>Modifier</Button>{' '}
+                  <Button variant="secondary" size="sm" onClick={() => navigate('/tri-simple')}>Retour</Button>{' '}
                   <Button variant="outline-dark" size="sm" onClick={handleExportPDF}>Exporter en PDF</Button>
                 </>
               ) : (
                 <>
-                  <Button variant="success" size="sm" onClick={handleSave}>Sauvegarder</Button>
-                  {' '}
+                  <Button variant="success" size="sm" onClick={handleSave}>Sauvegarder</Button>{' '}
                   <Button variant="danger" size="sm" onClick={() => setEditMode(false)}>Annuler</Button>
                 </>
               )}
@@ -141,11 +138,7 @@ const PassportDetail = () => {
           </Col>
         </Row>
 
-        <h5 className="text-center mb-3">
-          Détail sur l’expatrié ID :
-          {' '}
-          {passport.id}
-        </h5>
+        <h5 className="text-center mb-3">Détail sur l’expatrié ID : {passport.id}</h5>
 
         <Form>
           <Row className="g-2">
@@ -153,7 +146,7 @@ const PassportDetail = () => {
               if (key === 'photo') return null;
               return (
                 <Col md={4} sm={6} xs={12} key={key}>
-                  <Form.Group>
+                  <Form.Group controlId={`form-${key}`}>
                     <Form.Label className="small fw-semibold">
                       {key.replace(/_/g, ' ').toUpperCase()}
                     </Form.Label>
@@ -164,6 +157,7 @@ const PassportDetail = () => {
                       onChange={handleChange}
                       disabled={!editMode || key === 'date_enregistrement'}
                       size="sm"
+                      autoComplete="off"
                     />
                   </Form.Group>
                 </Col>

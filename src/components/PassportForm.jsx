@@ -5,6 +5,7 @@ import {
 } from 'react-bootstrap';
 import paysData from '../data/pays.json';
 import typesVisa from '../data/typesVisa.json';
+import db from '../db/indexedDb.js'; // <-- ajuste ce chemin vers ta base Dexie
 
 // Import du css
 import './PassportForm.css';
@@ -22,20 +23,21 @@ const initialState = {
   nationalite: '',
   type_visa: '',
   profession: '',
-  en_charge_de: '',
-  frontalier: '',
+  prise_en_charge: '',
+  frontiere: '',
   adresse_rdc: '',
-  date_expiration: '',
+  date_expiration_pp: '',
   date_entree: '',
-  date_retour: '',
+  date_expiration_visa: '',
   date_enregistrement: getTodayDate(),
+  agent_au_poste: '',
 };
 
 function PassportForm({ onSubmit }) {
   const [formData, setFormData] = useState(initialState);
   const [paysList, setPaysList] = useState([]);
   const [visaList, setVisaList] = useState([]);
-  const fileInputRef = useRef(null); // ref pour réinitialiser le champ file
+  const fileInputRef = useRef(null);
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -65,15 +67,27 @@ function PassportForm({ onSubmit }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({
+
+    // Vérification doublon numéro_passport dans Dexie
+    const existing = await db.passports
+      .where('numero_passport')
+      .equals(formData.numero_passport.trim())
+      .first();
+
+    if (existing) {
+      alert(`Le numéro de passeport "${formData.numero_passport}" ce numéro PP existe déjà ! Veuillez entrer un nouveau.`);
+      return; // Stop submission
+    }
+
+    await onSubmit({
       ...formData,
       date_enregistrement: getTodayDate(),
     });
+
     setFormData({ ...initialState, date_enregistrement: getTodayDate() });
 
-    // Réinitialiser le champ file (vidage visuel)
     if (fileInputRef.current) {
       fileInputRef.current.value = null;
     }
@@ -159,7 +173,7 @@ function PassportForm({ onSubmit }) {
         </Col>
       </Row>
 
-      {/* Nationalité, Type de visa, Profession (date_expiration_visa */}
+      {/* Nationalité, Type de visa, Date d'expiration visa */}
       <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
@@ -190,17 +204,17 @@ function PassportForm({ onSubmit }) {
         <Col md={4}>
           <Form.Group>
             <Form.Label>Date D&apos;expiration Visa</Form.Label>
-            <Form.Control type="date" name="date_retour" value={formData.date_retour} onChange={handleChange} />
+            <Form.Control type="date" name="date_expiration_visa" value={formData.date_expiration_visa} onChange={handleChange} />
           </Form.Group>
         </Col>
       </Row>
 
-      {/* En charge, Frontalier, Adresse RDC (date_expirationpp, date_entree, frontiere */}
+      {/* Dates expiration PP, entrée, frontière */}
       <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
             <Form.Label>Date D&apos;expiration PP</Form.Label>
-            <Form.Control type="date" name="date_expiration" value={formData.date_expiration} onChange={handleChange} />
+            <Form.Control type="date" name="date_expiration_pp" value={formData.date_expiration_pp} onChange={handleChange} />
           </Form.Group>
         </Col>
         <Col md={4}>
@@ -212,7 +226,7 @@ function PassportForm({ onSubmit }) {
         <Col md={4}>
           <Form.Group>
             <Form.Label>Frontière de</Form.Label>
-            <Form.Select name="frontalier" value={formData.frontalier} onChange={handleChange} required>
+            <Form.Select name="frontiere" value={formData.frontiere} onChange={handleChange} required>
               <option value="">-- Choisir --</option>
               <option value="Ruzizi 1">Ruzizi 1</option>
               <option value="Ruzizi 2">Ruzizi 2</option>
@@ -222,18 +236,18 @@ function PassportForm({ onSubmit }) {
         </Col>
       </Row>
 
-      {/* Dates diverses (adresse, prise en charge, profession */}
+      {/* Adresse RDC, prise en charge, profession */}
       <Row className="mb-2">
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Adresse en RDC (ville/commune/Quartie/Avenue)</Form.Label>
+            <Form.Label>Adresse en RDC (ville/commune/Quartier/Avenue)</Form.Label>
             <Form.Control name="adresse_rdc" value={formData.adresse_rdc} onChange={handleChange} />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Prise en charge </Form.Label>
-            <Form.Control name="en_charge_de" value={formData.en_charge_de} onChange={handleChange} />
+            <Form.Label>Prise en charge</Form.Label>
+            <Form.Control name="prise_en_charge" value={formData.prise_en_charge} onChange={handleChange} />
           </Form.Group>
         </Col>
         <Col md={4}>
@@ -243,7 +257,6 @@ function PassportForm({ onSubmit }) {
           </Form.Group>
         </Col>
       </Row>
-
       <Row className="mb-4">
         <Col md={4}>
           <Form.Group>
@@ -261,12 +274,19 @@ function PassportForm({ onSubmit }) {
         <Col md={4}>
           <Form.Group>
             <Form.Label>Agent au poste</Form.Label>
-            <Form.Control name="agent_saisi" value={formData.agent_saisi || ''} onChange={handleChange} />
+            <Form.Control name="agent_au_poste" value={formData.agent_au_poste || ''} onChange={handleChange} />
           </Form.Group>
         </Col>
       </Row>
 
-      <Button type="submit" variant="success">Enregistrer</Button>
+      {/* Bouton Envoyer */}
+      <Row>
+        <Col md={12}>
+          <Button variant="primary" type="submit" className="mt-2">
+            Enregistrer
+          </Button>
+        </Col>
+      </Row>
     </Form>
   );
 }

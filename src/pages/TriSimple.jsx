@@ -22,7 +22,7 @@ const TriSimple = () => {
     const doc = new JsPDF();
     const tableColumn = [
       'PRENOM', 'NOM&POST-NOM', 'NATIONALITE', 'NUME. PP',
-      'EXP. PP', 'D. ENTREE', 'EXP. VISA',
+      'EXP. PP', 'D. ENTREE', 'EXP. VISA', 'DATE ENREG',
     ];
     const tableRows = [];
 
@@ -32,9 +32,9 @@ const TriSimple = () => {
         item.nom,
         item.nationalite,
         item.numero_passport,
-        item.date_expiration,
+        item.date_expiration_pp,
         item.date_entree,
-        item.date_retour,
+        item.date_expiration_visa,
         new Date(item.date_enregistrement).toLocaleDateString(),
       ]);
     });
@@ -137,6 +137,8 @@ const TriSimple = () => {
             placeholder="Filtrer par prénom"
             value={prenomFilter}
             onChange={(e) => setPrenomFilter(e.target.value)}
+            id="prenomFilter"
+            name="prenomFilter"
           />
         </Col>
         <Col md={3}>
@@ -145,12 +147,16 @@ const TriSimple = () => {
             placeholder="Filtrer par numéro de passeport"
             value={passportFilter}
             onChange={(e) => setPassportFilter(e.target.value)}
+            id="passportFilter"
+            name="passportFilter"
           />
         </Col>
         <Col md={3}>
           <Form.Select
             value={selectedNat}
             onChange={(e) => setSelectedNat(e.target.value)}
+            id="selectedNationality"
+            name="selectedNationality"
           >
             <option value="">Toutes les nationalités</option>
             {nationalities.map((nat) => (
@@ -162,6 +168,8 @@ const TriSimple = () => {
           <Form.Select
             value={itemsPerPage}
             onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            id="itemsPerPage"
+            name="itemsPerPage"
           >
             <option value="5">5 par page</option>
             <option value="10">10 par page</option>
@@ -199,9 +207,9 @@ const TriSimple = () => {
                   <td>{row.nom}</td>
                   <td>{row.nationalite}</td>
                   <td>{row.numero_passport}</td>
-                  <td>{row.date_expiration}</td>
+                  <td>{row.date_expiration_pp}</td>
                   <td>{row.date_entree}</td>
-                  <td>{row.date_retour}</td>
+                  <td>{row.date_expiration_visa}</td>
                   <td>{new Date(row.date_enregistrement).toLocaleDateString()}</td>
                   <td>
                     <Button

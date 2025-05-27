@@ -78,7 +78,10 @@ const TriExport = () => {
 
       <Row className="mb-3">
         <Col md={3}>
+          <Form.Label htmlFor="prenomFilter">Filtrer par prénom</Form.Label>
           <Form.Control
+            id="prenomFilter"
+            name="prenomFilter"
             type="text"
             placeholder="Filtrer par prénom"
             value={prenomFilter}
@@ -87,7 +90,10 @@ const TriExport = () => {
         </Col>
 
         <Col md={3}>
+          <Form.Label htmlFor="passportFilter">Filtrer par numéro passeport</Form.Label>
           <Form.Control
+            id="passportFilter"
+            name="passportFilter"
             type="text"
             placeholder="Filtrer par numéro passeport"
             value={passportFilter}
@@ -96,7 +102,10 @@ const TriExport = () => {
         </Col>
 
         <Col md={3}>
+          <Form.Label htmlFor="selectedNat">Nationalité</Form.Label>
           <Form.Select
+            id="selectedNat"
+            name="selectedNat"
             value={selectedNat}
             onChange={(e) => setSelectedNat(e.target.value)}
           >
@@ -112,16 +121,20 @@ const TriExport = () => {
 
       <Row className="mb-3" align="center">
         <Col md={3}>
-          <Form.Label>Date enregistrement début</Form.Label>
+          <Form.Label htmlFor="startDate">Date enregistrement début</Form.Label>
           <Form.Control
+            id="startDate"
+            name="startDate"
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
         </Col>
         <Col md={3}>
-          <Form.Label>Date enregistrement fin</Form.Label>
+          <Form.Label htmlFor="endDate">Date enregistrement fin</Form.Label>
           <Form.Control
+            id="endDate"
+            name="endDate"
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}

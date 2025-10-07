@@ -28,13 +28,13 @@ const TriSimple = () => {
 
     filteredData.forEach((item) => {
       tableRows.push([
-        item.prenom,
-        item.nom,
-        item.nationalite,
-        item.numero_passport,
-        item.date_expiration,
-        item.date_entree,
-        item.date_retour,
+        item.prenom || '',
+        item.nom || '',
+        item.nationalite || '',
+        item.numero_passport || '',
+        item.date_expiration || '',
+        item.date_entree || '',
+        item.date_retour || '',
         new Date(item.date_enregistrement).toLocaleDateString(),
       ]);
     });
@@ -62,19 +62,24 @@ const TriSimple = () => {
 
   useEffect(() => {
     const filtered = data.filter((item) => {
-      const matchPrenom = item.prenom.toLowerCase().includes(prenomFilter.toLowerCase());
-      const matchPassport = item.numero_passport.toLowerCase().includes(passportFilter
-        .toLowerCase());
+      const matchPrenom = item.prenom
+        ? item.prenom.toLowerCase().includes(prenomFilter.toLowerCase())
+        : true;
+
+      const matchPassport = item.numero_passport
+        ? item.numero_passport.toLowerCase().includes(passportFilter.toLowerCase())
+        : true;
+
       const matchNat = selectedNat ? item.nationalite === selectedNat : true;
       return matchPrenom && matchPassport && matchNat;
     });
+
     setFilteredData(filtered);
     setCurrentPage(1);
   }, [prenomFilter, passportFilter, selectedNat, data]);
 
   const handleDelete = async (id) => {
-    // eslint-disable-next-line no-alert
-    const isConfirmed = window.confirm('Voulez-vous vraiment supprimer cet enregistrement ?'); // no-alert géré
+    const isConfirmed = window.confirm('Voulez-vous vraiment supprimer cet enregistrement ?');
     if (isConfirmed) {
       await db.passports.delete(id);
       const newData = data.filter((item) => item.id !== id);
@@ -195,14 +200,14 @@ const TriSimple = () => {
               {currentItems.map((row, index) => (
                 <tr key={row.id}>
                   <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                  <td>{row.prenom}</td>
-                  <td>{row.nom}</td>
-                  <td>{row.nationalite}</td>
-                  <td>{row.numero_passport}</td>
-                  <td>{row.date_expiration}</td>
-                  <td>{row.date_entree}</td>
-                  <td>{row.date_retour}</td>
-                  <td>{new Date(row.date_enregistrement).toLocaleDateString()}</td>
+                  <td>{row.prenom || ''}</td>
+                  <td>{row.nom || ''}</td>
+                  <td>{row.nationalite || ''}</td>
+                  <td>{row.numero_passport || ''}</td>
+                  <td>{row.date_expiration || ''}</td>
+                  <td>{row.date_entree || ''}</td>
+                  <td>{row.date_retour || ''}</td>
+                  <td>{row.date_enregistrement ? new Date(row.date_enregistrement).toLocaleDateString() : ''}</td>
                   <td>
                     <Button
                       variant="danger"

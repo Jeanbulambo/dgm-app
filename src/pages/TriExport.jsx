@@ -2,22 +2,40 @@ import { useEffect, useState } from 'react';
 import {
   Container, Table, Form, Button, Row, Col,
 } from 'react-bootstrap';
-import Papa from 'papaparse';
-import { saveAs } from 'file-saver';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import db from '../db/indexedDb';
+
+const columnMapping = {
+  prenom: 'Prénom',
+  nom: 'Nom',
+  numero_passport: 'Numéro Passeport',
+  sexe: 'Sexe',
+  date_naissance: 'Date de Naissance',
+  etat_civil: 'Etat Civil',
+  profession: 'Profession',
+  nationalite: 'Nationalité',
+  en_charge_de: 'En Charge De',
+  type_visa: 'Type Visa',
+  date_expiration: 'Date Expiration',
+  date_entree: 'Date Entrée',
+  frontalier: 'Frontalier',
+  date_retour: 'Date Retour',
+  adresse_rdc: 'Adresse RDC',
+  date_enregistrement: 'Date Enregistrement',
+  agent_saisi: 'Agent Saisi',
+};
 
 const TriExport = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-
   const [prenomFilter, setPrenomFilter] = useState('');
   const [passportFilter, setPassportFilter] = useState('');
   const [selectedNat, setSelectedNat] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-
   const [nationalities, setNationalities] = useState([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,11 +58,11 @@ const TriExport = () => {
   useEffect(() => {
     const filtered = data.filter((item) => {
       const matchPrenom = prenomFilter
-        ? item.prenom.toLowerCase().includes(prenomFilter.toLowerCase())
+        ? (item.prenom || '').toLowerCase().includes(prenomFilter.toLowerCase())
         : true;
 
       const matchPassport = passportFilter
-        ? item.numero_passport.toLowerCase().includes(passportFilter.toLowerCase())
+        ? (item.numero_passport || '').toLowerCase().includes(passportFilter.toLowerCase())
         : true;
 
       const matchNat = selectedNat ? item.nationalite === selectedNat : true;
@@ -59,17 +77,35 @@ const TriExport = () => {
     setFilteredData(filtered);
   }, [prenomFilter, passportFilter, selectedNat, startDate, endDate, data]);
 
-  const exportCSV = () => {
-    const csv = Papa.unparse(
-      filteredData.map(({ photo, id, ...rest }) => rest),
-      {
-        quotes: false,
-        delimiter: ';',
-        skipEmptyLines: true,
-      },
-    );
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'donnees_exportees.csv');
+  const exportExcel = () => {
+    const worksheetData = filteredData.map((item) => {
+      const row = {};
+      Object.keys(columnMapping).forEach((key) => {
+        if (key === 'photo') return; // Ignorer les photos
+        let value = item[key] || '';
+        if (key.includes('date') && value) value = new Date(value);
+        // Tronquer si trop long (optionnel)
+        if (typeof value === 'string' && value.length > 32767) {
+          value = value.substring(0, 32767);
+        }
+        row[columnMapping[key]] = value;
+      });
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+
+    // Mettre les en-têtes en gras
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (!worksheet[cellAddress]) continue;
+      worksheet[cellAddress].s = { font: { bold: true } };
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Expatriés');
+    XLSX.writeFile(workbook, 'expatries.xlsx');
   };
 
   return (
@@ -102,9 +138,7 @@ const TriExport = () => {
           >
             <option value="">Toutes les nationalités</option>
             {nationalities.map((nat) => (
-              <option key={nat} value={nat}>
-                {nat}
-              </option>
+              <option key={nat} value={nat}>{nat}</option>
             ))}
           </Form.Select>
         </Col>
@@ -112,7 +146,7 @@ const TriExport = () => {
 
       <Row className="mb-3" align="center">
         <Col md={3}>
-          <Form.Label>Date enregistrement début</Form.Label>
+          <Form.Label>Date début</Form.Label>
           <Form.Control
             type="date"
             value={startDate}
@@ -120,7 +154,7 @@ const TriExport = () => {
           />
         </Col>
         <Col md={3}>
-          <Form.Label>Date enregistrement fin</Form.Label>
+          <Form.Label>Date fin</Form.Label>
           <Form.Control
             type="date"
             value={endDate}
@@ -131,10 +165,9 @@ const TriExport = () => {
 
       <Row className="mb-3">
         <Col md="auto">
-          <Button variant="primary" onClick={exportCSV} className="me-2">
-            Exporter CSV
+          <Button variant="success" className="me-2" onClick={exportExcel}>
+            Exporter Excel
           </Button>
-
           <Button variant="secondary" onClick={() => navigate('/')}>
             Retour
           </Button>
@@ -146,20 +179,24 @@ const TriExport = () => {
           <Table striped bordered hover responsive>
             <thead className="table-dark">
               <tr>
-                {Object.keys(filteredData[0] || {})
-                  .filter((key) => key !== 'photo' && key !== 'id')
-                  .map((key) => (
-                    <th key={key}>{key.toUpperCase()}</th>
+                {Object.values(columnMapping)
+                  .filter((val) => val !== 'Photo')
+                  .map((val) => (
+                    <th key={val}>{val}</th>
                   ))}
               </tr>
             </thead>
             <tbody>
               {filteredData.map((row) => (
-                <tr key={row.numero_passport || JSON.stringify(row)}>
-                  {Object.entries(row)
-                    .filter(([key]) => key !== 'photo' && key !== 'id')
-                    .map(([key, val]) => (
-                      <td key={key}>{String(val)}</td>
+                <tr key={row.id}>
+                  {Object.keys(columnMapping)
+                    .filter((key) => key !== 'photo')
+                    .map((key) => (
+                      <td key={key}>
+                        {key.includes('date') && row[key]
+                          ? new Date(row[key]).toLocaleDateString()
+                          : row[key]}
+                      </td>
                     ))}
                 </tr>
               ))}
